@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Manajemen Inventory</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        .btn-sm i {
+    font-size: 14px; /* Ukuran ikon */
+    margin-right: 5px; /* Jarak antara ikon dan teks (jika ada) */
+}
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #343a40;
+            color: white;
+            padding: 20px 0;
+        }
+        .sidebar h2 {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #495057;
+            margin: 0 20px 20px;
+        }
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu li {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .menu li:hover {
+            background-color: #495057;
+        }
+        .menu li.active {
+            background-color: #007bff;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            background-color: white;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #dee2e6;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .btn {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .form-row .form-group:last-child {
+            margin-right: 0;
+        }
+        .btn-group {
+            margin-top: 5px;
+            text-align: right;
+        }
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .date-filter {
+            display: flex;
+            align-items: center;
+        }
+        .date-filter label {
+            margin-right: 10px;
+        }
+        .date-filter input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+
+
+
+        /* Gaya untuk header */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa; /* Warna latar untuk visualisasi */
+            padding: 10px; /* Padding untuk visualisasi */
+        }
+
+        .header h1 {
+            margin: 0;
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        /* Gaya untuk tombol */
+        .btn {
+            margin: 2px;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+        }
+
+        .hasil-cari {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    width: 100%;
+}
+
+.hasil-cari div {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.hasil-cari div:hover {
+    background-color: #f1f1f1;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Inventory</h2>
+            <ul class="menu">
+                <li class="menu-item active" data-page="dashboard">Dashboard</li>
+                <li class="menu-item" data-page="master-barang">Master Barang</li>
+                <li class="menu-item" data-page="stok-masuk">Stok Masuk</li>
+                <li class="menu-item" data-page="stok-keluar">Stok Keluar</li>
+                <li class="menu-item" data-page="rekap-stok">Rekap Stok</li>
+                <li class="menu-item" data-page="stok-opname">Stok Opname</li>
+                <li class="menu-item" data-page="laporan">Laporan</li>
+            </ul>
+        </div>
+        
+        <div class="content">
+            <!-- Dashboard -->
+            <div class="page active" id="dashboard">
+                <h1>Dashboard</h1>
+                <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                    <div style="background-color: #007bff; color: white; padding: 20px; border-radius: 5px; flex: 1; min-width: 200px;">
+                        <h3>Total Barang</h3>
+                        <h2 id="total-barang">0</h2>
+                    </div>
+                    <div style="background-color: #28a745; color: white; padding: 20px; border-radius: 5px; flex: 1; min-width: 200px;">
+                        <h3>Barang Masuk Bulan Ini</h3>
+                        <h2 id="barang-masuk-bulan">0</h2>
+                    </div>
+                    <div style="background-color: #dc3545; color: white; padding: 20px; border-radius: 5px; flex: 1; min-width: 200px;">
+                        <h3>Barang Keluar Bulan Ini</h3>
+                        <h2 id="barang-keluar-bulan">0</h2>
+                    </div>
+                    <div style="background-color: #ffc107; color: #212529; padding: 20px; border-radius: 5px; flex: 1; min-width: 200px;">
+                        <h3>Stok Hampir Habis</h3>
+                        <h2 id="stok-hampir-habis">0</h2>
+                    </div>
+                </div>
+                
+                <h2>Barang dengan Stok Terbanyak</h2>
+                <table id="top-stok">
+                    <thead>
+                        <tr>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Kategori</th>
+                            <th>Stok</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                
+                <h2>Barang dengan Stok Menipis</h2>
+                <table id="low-stok">
+                    <thead>
+                        <tr>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Kategori</th>
+                            <th>Stok</th>
+                            <th>Stok Minimum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Master Barang -->
+            <div class="page" id="master-barang">
+                <div class="header">
+                    <h1>Master Barang</h1>
+                    
+                </div>
+                <input type="file" id="import-excel" style="display: none;" onchange="handleFileImport(event)">
+                <button class="btn btn-warning" onclick="document.getElementById('import-excel').click()">Import Excel</button>
+                    <button class="btn btn-info" onclick="exportTableToExcel('table-barang', 'master_barang')">Export Excel</button>
+                    <button class="btn btn-warning" onclick="exportTableToPDF('table-barang', 'Master Barang')">Export PDF</button>
+                
+                    <button class="btn btn-danger" onclick="hapusSemuaBarang()">Hapus Semua Data</button>
+                    <button id="tambah-barang" class="btn btn-success">Tambah Barang</button>
+                <div class="search-box">
+                    <input type="text" id="search-barang" placeholder="Cari barang...">
+                    <button class="btn" onclick="searchBarang()">Cari</button>
+                    
+                    
+                </div>
+                
+                <table id="table-barang">
+                    <thead>
+                        <tr>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Kategori</th>
+                            <th>Satuan</th>
+                            <th>Harga Beli</th>
+                            <th>Harga Jual</th>
+                            <th>Stok</th>
+                            <th>Stok Minimum</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Stok Masuk -->
+            <div class="page" id="stok-masuk">
+                <div class="header">
+                    <h1>Stok Masuk</h1>
+                   
+                </div>
+                <button class="btn btn-info" onclick="exportTableToExcel('table-stok-masuk', 'stok_masuk')">Export Excel</button>
+                <button class="btn btn-warning" onclick="exportTableToPDF('table-stok-masuk', 'Stok Masuk')">Export PDF</button>
+                <button class="btn btn-danger" onclick="hapusSemuaStokMasuk()">Hapus Semua Data</button>
+                <button id="tambah-stok-masuk" class="btn btn-success">Tambah Stok Masuk</button>
+                <div class="search-box">
+                    <div class="date-filter">
+                        <label>Dari:</label>
+                        <input type="date" id="dari-tanggal-masuk">
+                        <label>Sampai:</label>
+                        <input type="date" id="sampai-tanggal-masuk">
+                        <button class="btn" onclick="filterStokMasuk()">Filter</button>
+                    </div>
+
+                </div>
+                
+                <table id="table-stok-masuk">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Supplier</th>
+                            <th>Keterangan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Stok Keluar -->
+            <div class="page" id="stok-keluar">
+                <div class="header">
+                    <h1>Stok Keluar</h1>
+                    
+                </div>
+                <button class="btn btn-info" onclick="exportTableToExcel('table-stok-keluar', 'stok_keluar')">Export Excel</button>
+                    <button class="btn btn-warning" onclick="exportTableToPDF('table-stok-keluar', 'Stok Keluar')">Export PDF</button>
+                    <button class="btn btn-danger" onclick="hapusSemuaStokKeluar()">Hapus Semua Data</button>
+                    <button id="tambah-stok-keluar" class="btn btn-success">Tambah Stok Keluar</button>
+                <div class="search-box">
+                    <div class="date-filter">
+                        <label>Dari:</label>
+                        <input type="date" id="dari-tanggal-keluar">
+                        <label>Sampai:</label>
+                        <input type="date" id="sampai-tanggal-keluar">
+                        <button class="btn" onclick="filterStokKeluar()">Filter</button>
+                    </div>
+                    
+                </div>
+                
+                <table id="table-stok-keluar">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Penerima</th>
+                            <th>Keterangan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Rekap Stok -->
+            <div class="page" id="rekap-stok">
+                <div class="header">
+                    <h1>Rekap Stok</h1>
+                </div>
+                <button class="btn btn-info" onclick="exportTableToExcel('table-rekap-stok', 'rekap_stok')">Export Excel</button>
+                <button class="btn btn-warning" onclick="exportTableToPDF('table-rekap-stok', 'Rekap Stok')">Export PDF</button>
+                <div class="search-box">
+                    <input type="text" id="search-rekap" placeholder="Cari barang...">
+                    <button class="btn" onclick="searchRekapStok()">Cari</button>
+                   
+                </div>
+                
+                <table id="table-rekap-stok">
+                    <thead>
+                        <tr>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Kategori</th>
+                            <th>Stok Awal</th>
+                            <th>Stok Masuk</th>
+                            <th>Stok Keluar</th>
+                            <th>Stok Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Stok Opname -->
+            <div class="page" id="stok-opname">
+                <div class="header">
+                    <h1>Stok Opname</h1>
+                 
+                </div>
+                <button class="btn btn-info" onclick="exportTableToExcel('table-stok-opname', 'stok_opname')">Export Excel</button>
+                <button class="btn btn-warning" onclick="exportTableToPDF('table-stok-opname', 'Stok Opname')">Export PDF</button>
+                <button class="btn btn-danger" onclick="hapusSemuaStokOpname()">Hapus Semua Data</button>
+                <button id="tambah-stok-opname" class="btn btn-success">Mulai Stok Opname</button>
+                
+                <div class="search-box">
+                    <div class="date-filter">
+                        <label>Tanggal:</label>
+                        <input type="date" id="tanggal-opname">
+                        <button class="btn" onclick="filterStokOpname()">Filter</button>
+                    </div>
+                    
+                </div>
+                
+                <table id="table-stok-opname">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Petugas</th> <!-- Kolom petugas -->
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Stok Sistem</th>
+                            <th>Stok Fisik</th>
+                            <th>Selisih</th>
+                            <th>Keterangan</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Laporan -->
+            <div class="page" id="laporan">
+                <h1>Laporan</h1>
+                
+                <div class="form-group">
+                    <label>Jenis Laporan:</label>
+                    <select id="jenis-laporan">
+                        <option value="master-barang">Master Barang</option>
+                        <option value="stok-masuk">Stok Masuk</option>
+                        <option value="stok-keluar">Stok Keluar</option>
+                        <option value="rekap-stok">Rekap Stok</option>
+                        <option value="stok-opname">Stok Opname</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Dari Tanggal:</label>
+                        <input type="date" id="laporan-dari-tanggal">
+                    </div>
+                    <div class="form-group">
+                        <label>Sampai Tanggal:</label>
+                        <input type="date" id="laporan-sampai-tanggal">
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn" onclick="generateLaporan()">Generate Laporan</button>
+                    <button class="btn btn-info" onclick="exportLaporanToExcel()">Export Excel</button>
+                    <button class="btn btn-warning" onclick="exportLaporanToPDF()">Export PDF</button>
+                </div>
+                
+                <div id="hasil-laporan" style="margin-top: 20px;">
+                    <h2 id="judul-laporan"></h2>
+                    <table id="table-laporan">
+                        <thead id="laporan-head">
+                        </thead>
+                        <tbody id="laporan-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Form Barang -->
+    <div id="modal-barang" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-barang-title">Tambah Barang</h2>
+            <form id="form-barang">
+                <input type="hidden" id="barang-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="kode-barang">Kode Barang:</label>
+                        <input type="text" id="kode-barang" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nama-barang">Nama Barang:</label>
+                        <input type="text" id="nama-barang" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="kategori">Kategori:</label>
+                        <input type="text" id="kategori" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="satuan">Satuan:</label>
+                        <input type="text" id="satuan" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="harga-beli">Harga Beli:</label>
+                        <input type="number" id="harga-beli" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="harga-jual">Harga Jual:</label>
+                        <input type="number" id="harga-jual" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="stok">Stok Awal:</label>
+                        <input type="number" id="stok" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stok-min">Stok Minimum:</label>
+                        <input type="number" id="stok-min" required>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('modal-barang')">Batal</button>
+                    <button type="button" class="btn btn-success" onclick="saveBarang()">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Form Stok Masuk -->
+    <div id="modal-stok-masuk" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Tambah Stok Masuk</h2>
+            <form id="form-stok-masuk">
+                <input type="hidden" id="stok-masuk-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tanggal-masuk">Tanggal:</label>
+                        <input type="date" id="tanggal-masuk" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="barang-masuk">Barang:</label>
+                        <input type="text" id="barang-masuk" placeholder="Cari barang..." oninput="searchBarangStokMasuk()">
+                        <div id="hasil-cari-masuk" class="hasil-cari"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="jumlah-masuk">Jumlah:</label>
+                        <input type="number" id="jumlah-masuk" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplier">Supplier:</label>
+                        <input type="text" id="supplier" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="keterangan-masuk">Keterangan:</label>
+                    <input type="text" id="keterangan-masuk">
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('modal-stok-masuk')">Batal</button>
+                    <button type="button" class="btn btn-success" onclick="saveStokMasuk()">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Form Stok Keluar -->
+    <div id="modal-stok-keluar" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Tambah Stok Keluar</h2>
+            <form id="form-stok-keluar">
+                <input type="hidden" id="stok-keluar-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tanggal-keluar">Tanggal:</label>
+                        <input type="date" id="tanggal-keluar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="barang-keluar">Barang:</label>
+                        <input type="text" id="barang-keluar" placeholder="Cari barang..." oninput="searchBarangStokKeluar()">
+                        <div id="hasil-cari-keluar" class="hasil-cari"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="jumlah-keluar">Jumlah:</label>
+                        <input type="number" id="jumlah-keluar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="penerima">Penerima:</label>
+                        <input type="text" id="penerima" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="keterangan-keluar">Keterangan:</label>
+                    <input type="text" id="keterangan-keluar">
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('modal-stok-keluar')">Batal</button>
+                    <button type="button" class="btn btn-success" onclick="saveStokKeluar()">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Form Stok Opname -->
+    <div id="modal-stok-opname" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-stok-opname')">&times;</span>
+            <h2>Stok Opname</h2>
+            <form id="form-stok-opname">
+                <div class="form-group">
+                    <label for="tanggal-stok-opname">Tanggal:</label>
+                    <input type="date" id="tanggal-stok-opname" required>
+                </div>
+                <div class="form-group">
+                    <label for="petugas-stok-opname">Petugas:</label>
+                    <input type="text" id="petugas-stok-opname" placeholder="Nama Petugas" required>
+                </div>
+                <div class="form-group">
+                    <label>Daftar Barang:</label>
+                    <table id="table-form-opname">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama Barang</th>
+                                <th>Stok Sistem</th>
+                                <th>Stok Fisik</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('modal-stok-opname')">Batal</button>
+                    <button type="button" class="btn btn-success" onclick="saveStokOpname()">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Data dummy
+        let dataBarang = [
+            { id: 1, kode: 'BRG001', nama: 'Laptop Asus', kategori: 'Elektronik', satuan: 'Unit', hargaBeli: 9000000, hargaJual: 9500000, stok: 5, stokMin: 2 },
+            { id: 2, kode: 'BRG002', nama: 'Mouse Logitech', kategori: 'Aksesoris', satuan: 'Pcs', hargaBeli: 150000, hargaJual: 175000, stok: 20, stokMin: 5 },
+            { id: 3, kode: 'BRG003', nama: 'Keyboard Mechanical', kategori: 'Aksesoris', satuan: 'Pcs', hargaBeli: 450000, hargaJual: 500000, stok: 8, stokMin: 3 },
+            { id: 4, kode: 'BRG004', nama: 'Monitor 24"', kategori: 'Elektronik', satuan: 'Unit', hargaBeli: 1800000, hargaJual: 2000000, stok: 4, stokMin: 2 },
+            { id: 5, kode: 'BRG005', nama: 'Headset Gaming', kategori: 'Aksesoris', satuan: 'Pcs', hargaBeli: 350000, hargaJual: 400000, stok: 10, stokMin: 4 }
+        ];
+        
+        let dataStokMasuk = [
+            { id: 1, tanggal: '2025-03-10', kodeBarang: 'BRG001', namaBarang: 'Laptop Asus', jumlah: 2, supplier: 'PT Supplier A', keterangan: 'Pengadaan baru' },
+            { id: 2, tanggal: '2025-03-12', kodeBarang: 'BRG002', namaBarang: 'Mouse Logitech', jumlah: 10, supplier: 'PT Supplier B', keterangan: 'Restock bulanan' },
+            { id: 3, tanggal: '2025-03-15', kodeBarang: 'BRG003', namaBarang: 'Keyboard Mechanical', jumlah: 5, supplier: 'PT Supplier B', keterangan: 'Penambahan stok' }
+        ];
+        
+        let dataStokKeluar = [
+            { id: 1, tanggal: '2025-03-13', kodeBarang: 'BRG001', namaBarang: 'Laptop Asus', jumlah: 1, penerima: 'Divisi IT', keterangan: 'Penggantian laptop rusak' },
+            { id: 2, tanggal: '2025-03-14', kodeBarang: 'BRG002', namaBarang: 'Mouse Logitech', jumlah: 3, penerima: 'Divisi Marketing', keterangan: 'Permintaan baru' },
+            { id: 3, tanggal: '2025-03-16', kodeBarang: 'BRG003', namaBarang: 'Keyboard Mechanical', jumlah: 2, penerima: 'Divisi Keuangan', keterangan: 'Penggantian keyboard rusak' }
+        ];
+        
+        let dataStokOpname = [
+            { id: 1, tanggal: '2025-03-18',petugas: 'John Doe', kodeBarang: 'BRG001', namaBarang: 'Laptop Asus', stokSistem: 6, stokFisik: 6, selisih: 0, keterangan: 'Sesuai', status: 'Selesai' },
+            { id: 2, tanggal: '2025-03-18',petugas: 'John Doe', kodeBarang: 'BRG002', namaBarang: 'Mouse Logitech', stokSistem: 27, stokFisik: 25, selisih: -2, keterangan: 'Hilang', status: 'Selesai' },
+            { id: 3, tanggal: '2025-03-18',petugas: 'John Doe', kodeBarang: 'BRG003', namaBarang: 'Keyboard Mechanical', stokSistem: 11, stokFisik: 11, selisih: 0, keterangan: 'Sesuai', status: 'Selesai' }
+        ];
+        
+        // fungsi untuk menyimpan data ke localStorage
+        function saveData() {
+            localStorage.setItem('dataBarang', JSON.stringify(dataBarang));
+            localStorage.setItem('dataStokMasuk', JSON.stringify(dataStokMasuk));
+            localStorage.setItem('dataStokKeluar', JSON.stringify(dataStokKeluar));
+            localStorage.setItem('dataStokOpname', JSON.stringify(dataStokOpname));
+        }
+        
+        // fungsi untuk memuat data dari localStorage
+        function loadData() {
+            if (localStorage.getItem('dataBarang')) {
+                dataBarang = JSON.parse(localStorage.getItem('dataBarang'));
+            }
+            if (localStorage.getItem('dataStokMasuk')) {
+                dataStokMasuk = JSON.parse(localStorage.getItem('dataStokMasuk'));
+            }
+            if (localStorage.getItem('dataStokKeluar')) {
+                dataStokKeluar = JSON.parse(localStorage.getItem('dataStokKeluar'));
+            }
+            if (localStorage.getItem('dataStokOpname')) {
+                dataStokOpname = JSON.parse(localStorage.getItem('dataStokOpname'));
+            }
+        }
+        
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            refreshDashboard();
+            refreshTableBarang();
+            refreshTableStokMasuk();
+            refreshTableStokKeluar();
+            refreshTableRekapStok();
+            refreshTableStokOpname();
+            
+            // Event listeners untuk menu
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    showPage(page);
+                });
+            });
+            
+            // Event listeners untuk tombol modal
+            document.getElementById('tambah-barang').addEventListener('click', function() {
+                showModalBarang();
+            });
+            
+            document.getElementById('tambah-stok-masuk').addEventListener('click', function() {
+                showModalStokMasuk();
+            });
+            
+            document.getElementById('tambah-stok-keluar').addEventListener('click', function() {
+                showModalStokKeluar();
+            });
+            
+            document.getElementById('tambah-stok-opname').addEventListener('click', function() {
+                showModalStokOpname();
+            });
+            
+            // Event listeners untuk tombol close modal
+            document.querySelectorAll('.close').forEach(close => {
+                close.addEventListener('click', function() {
+                    const modal = this.closest('.modal');
+                    modal.style.display = 'none';
+                });
+            });
+            
+            // Set tanggal default untuk filter
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dari-tanggal-masuk').value = today;
+            document.getElementById('sampai-tanggal-masuk').value = today;
+            document.getElementById('dari-tanggal-keluar').value = today;
+            document.getElementById('sampai-tanggal-keluar').value = today;
+            document.getElementById('tanggal-opname').value = today;
+            document.getElementById('laporan-dari-tanggal').value = today;
+            document.getElementById('laporan-sampai-tanggal').value = today;
+        });
+        
+        // Fungsi untuk menampilkan halaman
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById(pageId).classList.add('active');
+            document.querySelector(`.menu-item[data-page="${pageId}"]`).classList.add('active');
+        }
+        
+        // Fungsi untuk menampilkan modal barang
+        function showModalBarang(id = null) {
+            const modal = document.getElementById('modal-barang');
+            const form = document.getElementById('form-barang');
+            
+            // Reset form
+            form.reset();
+            document.getElementById('barang-id').value = '';
+            
+            if (id) {
+                const barang = dataBarang.find(item => item.id === id);
+                if (barang) {
+                    document.getElementById('modal-barang-title').textContent = 'Edit Barang';
+                    document.getElementById('barang-id').value = barang.id;
+                    document.getElementById('kode-barang').value = barang.kode;
+                    document.getElementById('nama-barang').value = barang.nama;
+                    document.getElementById('kategori').value = barang.kategori;
+                    document.getElementById('satuan').value = barang.satuan;
+                    document.getElementById('harga-beli').value = barang.hargaBeli;
+                    document.getElementById('harga-jual').value = barang.hargaJual;
+                    document.getElementById('stok').value = barang.stok;
+                    document.getElementById('stok-min').value = barang.stokMin;
+                }
+            } else {
+                document.getElementById('modal-barang-title').textContent = 'Tambah Barang';
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // Fungsi untuk menyimpan data barang
+        function saveBarang() {
+            const id = document.getElementById('barang-id').value;
+            const kode = document.getElementById('kode-barang').value;
+            const nama = document.getElementById('nama-barang').value;
+            const kategori = document.getElementById('kategori').value;
+            const satuan = document.getElementById('satuan').value;
+            const hargaBeli = parseFloat(document.getElementById('harga-beli').value);
+            const hargaJual = parseFloat(document.getElementById('harga-jual').value);
+            const stok = parseInt(document.getElementById('stok').value);
+            const stokMin = parseInt(document.getElementById('stok-min').value);
+            
+            if (!kode || !nama || !kategori || !satuan || isNaN(hargaBeli) || isNaN(hargaJual) || isNaN(stok) || isNaN(stokMin)) {
+                alert('Semua field harus diisi dengan benar!');
+                return;
+            }
+            
+            if (id) {
+                // Update barang
+                const index = dataBarang.findIndex(item => item.id === parseInt(id));
+                if (index !== -1) {
+                    dataBarang[index] = {
+                        id: parseInt(id),
+                        kode,
+                        nama,
+                        kategori,
+                        satuan,
+                        hargaBeli,
+                        hargaJual,
+                        stok,
+                        stokMin
+                    };
+                }
+            } else {
+                // Tambah barang baru
+                const newId = dataBarang.length ? Math.max(...dataBarang.map(item => item.id)) + 1 : 1;
+                dataBarang.push({
+                    id: newId,
+                    kode,
+                    nama,
+                    kategori,
+                    satuan,
+                    hargaBeli,
+                    hargaJual,
+                    stok,
+                    stokMin
+                });
+            }
+            
+            saveData();
+            refreshTableBarang();
+            refreshDashboard();
+            refreshTableRekapStok();
+            closeModal('modal-barang');
+        }
+        
+        // Fungsi untuk menampilkan modal stok masuk
+        function showModalStokMasuk(id = null) {
+            const modal = document.getElementById('modal-stok-masuk');
+            const form = document.getElementById('form-stok-masuk');
+            const barangSelect = document.getElementById('barang-masuk');
+            
+            // Reset form
+            form.reset();
+            document.getElementById('stok-masuk-id').value = '';
+            document.getElementById('tanggal-masuk').value = new Date().toISOString().split('T')[0];
+            
+            // Isi dropdown barang
+            barangSelect.innerHTML = '<option value="">Pilih Barang</option>';
+            dataBarang.forEach(barang => {
+                const option = document.createElement('option');
+                option.value = barang.kode;
+                option.textContent = `${barang.kode} - ${barang.nama}`;
+                barangSelect.appendChild(option);
+            });
+            
+            if (id) {
+                const stokMasuk = dataStokMasuk.find(item => item.id === id);
+                if (stokMasuk) {
+                    document.getElementById('stok-masuk-id').value = stokMasuk.id;
+                    document.getElementById('tanggal-masuk').value = stokMasuk.tanggal;
+                    document.getElementById('barang-masuk').value = stokMasuk.kodeBarang;
+                    document.getElementById('jumlah-masuk').value = stokMasuk.jumlah;
+                    document.getElementById('supplier').value = stokMasuk.supplier;
+                    document.getElementById('keterangan-masuk').value = stokMasuk.keterangan;
+                }
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // Fungsi untuk menyimpan data stok masuk
+        function saveStokMasuk() {
+            const id = document.getElementById('stok-masuk-id').value;
+    const tanggal = document.getElementById('tanggal-masuk').value;
+    const kodeBarang = document.getElementById('barang-masuk').getAttribute('data-kode');
+    const jumlah = parseInt(document.getElementById('jumlah-masuk').value);
+    const supplier = document.getElementById('supplier').value;
+    const keterangan = document.getElementById('keterangan-masuk').value;
+
+    if (!tanggal || !kodeBarang || isNaN(jumlah) || jumlah <= 0 || !supplier) {
+        alert('Semua field harus diisi dengan benar!');
+        return;
+    }
+
+    // Cari barang
+    const barang = dataBarang.find(item => item.kode === kodeBarang);
+    if (!barang) {
+        alert('Barang tidak ditemukan!');
+        return;
+    }
+
+    const namaBarang = barang.nama;
+            
+            if (id) {
+                // Update stok masuk
+                const index = dataStokMasuk.findIndex(item => item.id === parseInt(id));
+                const oldStokMasuk = dataStokMasuk[index];
+                
+                if (index !== -1) {
+                    // Update stok barang
+                    const barangIndex = dataBarang.findIndex(item => item.kode === oldStokMasuk.kodeBarang);
+                    if (barangIndex !== -1) {
+                        dataBarang[barangIndex].stok -= oldStokMasuk.jumlah;
+                    }
+                    
+                    // Update stok masuk
+                    dataStokMasuk[index] = {
+                        id: parseInt(id),
+                        tanggal,
+                        kodeBarang,
+                        namaBarang,
+                        jumlah,
+                        supplier,
+                        keterangan
+                    };
+                    
+                    // Update stok barang dengan nilai baru
+                    const newBarangIndex = dataBarang.findIndex(item => item.kode === kodeBarang);
+                    if (newBarangIndex !== -1) {
+                        dataBarang[newBarangIndex].stok += jumlah;
+                    }
+                }
+            } else {
+                // Tambah stok masuk baru
+                const newId = dataStokMasuk.length ? Math.max(...dataStokMasuk.map(item => item.id)) + 1 : 1;
+                dataStokMasuk.push({
+                    id: newId,
+                    tanggal,
+                    kodeBarang,
+                    namaBarang,
+                    jumlah,
+                    supplier,
+                    keterangan
+                });
+                
+                // Update stok barang
+                const barangIndex = dataBarang.findIndex(item => item.kode === kodeBarang);
+                if (barangIndex !== -1) {
+                    dataBarang[barangIndex].stok += jumlah;
+                }
+            }
+            
+            saveData();
+            refreshTableStokMasuk();
+            refreshTableBarang();
+            refreshDashboard();
+            refreshTableRekapStok();
+            closeModal('modal-stok-masuk');
+        }
+        
+        // Fungsi untuk menampilkan modal stok keluar
+        function showModalStokKeluar(id = null) {
+            const modal = document.getElementById('modal-stok-keluar');
+            const form = document.getElementById('form-stok-keluar');
+            const barangSelect = document.getElementById('barang-keluar');
+            
+            // Reset form
+            form.reset();
+            document.getElementById('stok-keluar-id').value = '';
+            document.getElementById('tanggal-keluar').value = new Date().toISOString().split('T')[0];
+            
+            // Isi dropdown barang
+            barangSelect.innerHTML = '<option value="">Pilih Barang</option>';
+            dataBarang.forEach(barang => {
+                const option = document.createElement('option');
+                option.value = barang.kode;
+                option.textContent = `${barang.kode} - ${barang.nama} (Stok: ${barang.stok})`;
+                barangSelect.appendChild(option);
+            });
+            
+            if (id) {
+                const stokKeluar = dataStokKeluar.find(item => item.id === id);
+                if (stokKeluar) {
+                    document.getElementById('stok-keluar-id').value = stokKeluar.id;
+                    document.getElementById('tanggal-keluar').value = stokKeluar.tanggal;
+                    document.getElementById('barang-keluar').value = stokKeluar.kodeBarang;
+                    document.getElementById('jumlah-keluar').value = stokKeluar.jumlah;
+                    document.getElementById('penerima').value = stokKeluar.penerima;
+                    document.getElementById('keterangan-keluar').value = stokKeluar.keterangan;
+                }
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // Fungsi untuk menyimpan data stok keluar
+        function saveStokKeluar() {
+            const id = document.getElementById('stok-keluar-id').value;
+    const tanggal = document.getElementById('tanggal-keluar').value;
+    const kodeBarang = document.getElementById('barang-keluar').getAttribute('data-kode');
+    const jumlah = parseInt(document.getElementById('jumlah-keluar').value);
+    const penerima = document.getElementById('penerima').value;
+    const keterangan = document.getElementById('keterangan-keluar').value;
+
+    if (!tanggal || !kodeBarang || isNaN(jumlah) || jumlah <= 0 || !penerima) {
+        alert('Semua field harus diisi dengan benar!');
+        return;
+    }
+
+    // Cari barang
+    const barang = dataBarang.find(item => item.kode === kodeBarang);
+    if (!barang) {
+        alert('Barang tidak ditemukan!');
+        return;
+    }
+
+    const namaBarang = barang.nama;
+            
+            if (id) {
+                // Update stok keluar
+                const index = dataStokKeluar.findIndex(item => item.id === parseInt(id));
+                const oldStokKeluar = dataStokKeluar[index];
+                
+                if (index !== -1) {
+                    // Update stok barang
+                    const barangIndex = dataBarang.findIndex(item => item.kode === oldStokKeluar.kodeBarang);
+                    if (barangIndex !== -1) {
+                        dataBarang[barangIndex].stok += oldStokKeluar.jumlah;
+                    }
+                    
+                    // Update stok keluar
+                    dataStokKeluar[index] = {
+                        id: parseInt(id),
+                        tanggal,
+                        kodeBarang,
+                        namaBarang,
+                        jumlah,
+                        penerima,
+                        keterangan
+                    };
+                    
+                    // Update stok barang dengan nilai baru
+                    const newBarangIndex = dataBarang.findIndex(item => item.kode === kodeBarang);
+                    if (newBarangIndex !== -1) {
+                        if (dataBarang[newBarangIndex].stok < jumlah) {
+                            alert('Stok tidak mencukupi!');
+                            return;
+                        }
+                        dataBarang[newBarangIndex].stok -= jumlah;
+                    }
+                }
+            } else {
+                // Tambah stok keluar baru
+                const barangIndex = dataBarang.findIndex(item => item.kode === kodeBarang);
+                if (barangIndex !== -1) {
+                    if (dataBarang[barangIndex].stok < jumlah) {
+                        alert('Stok tidak mencukupi!');
+                        return;
+                    }
+                    
+                    const newId = dataStokKeluar.length ? Math.max(...dataStokKeluar.map(item => item.id)) + 1 : 1;
+                    dataStokKeluar.push({
+                        id: newId,
+                        tanggal,
+                        kodeBarang,
+                        namaBarang,
+                        jumlah,
+                        penerima,
+                        keterangan
+                    });
+                    
+                    // Update stok barang
+                    dataBarang[barangIndex].stok -= jumlah;
+                }
+            }
+            
+            saveData();
+            refreshTableStokKeluar();
+            refreshTableBarang();
+            refreshDashboard();
+            refreshTableRekapStok();
+            closeModal('modal-stok-keluar');
+        }
+        
+        // Fungsi untuk menampilkan modal stok opname
+        function showModalStokOpname() {
+    const modal = document.getElementById('modal-stok-opname');
+    const form = document.getElementById('form-stok-opname');
+    const tableBody = document.querySelector('#table-form-opname tbody');
+
+    // Reset form
+    form.reset();
+    document.getElementById('tanggal-stok-opname').value = new Date().toISOString().split('T')[0]; // Set tanggal hari ini
+    document.getElementById('petugas-stok-opname').value = ''; // Kosongkan field petugas
+
+    // Isi tabel barang
+    tableBody.innerHTML = '';
+    dataBarang.forEach(barang => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${barang.kode}</td>
+            <td>${barang.nama}</td>
+            <td>${barang.stok}</td>
+            <td><input type="number" class="stok-fisik" data-kode="${barang.kode}" value="${barang.stok}" required></td>
+            <td><input type="text" class="keterangan-opname" data-kode="${barang.kode}"></td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    // Tampilkan modal
+    modal.style.display = 'block';
+}
+        
+        // Fungsi untuk menyimpan data stok opname
+        function saveStokOpname() {
+    const modal = document.getElementById('modal-stok-opname');
+    const editId = modal.getAttribute('data-edit-id'); // Ambil ID data yang sedang diedit
+    const tanggal = document.getElementById('tanggal-stok-opname').value;
+    const petugas = document.getElementById('petugas-stok-opname').value; // Ambil nilai petugas
+    const stokFisikInputs = document.querySelectorAll('.stok-fisik');
+    const keteranganInputs = document.querySelectorAll('.keterangan-opname');
+
+    if (!tanggal || !petugas) {
+        alert('Tanggal dan Petugas harus diisi!');
+        return;
+    }
+
+    for (let i = 0; i < stokFisikInputs.length; i++) {
+        const kodeBarang = stokFisikInputs[i].getAttribute('data-kode');
+        const stokFisik = parseInt(stokFisikInputs[i].value);
+        const keterangan = keteranganInputs[i].value;
+
+        if (isNaN(stokFisik)) {
+            alert('Stok fisik harus diisi dengan angka yang valid!');
+            return;
+        }
+
+        const barang = dataBarang.find(item => item.kode === kodeBarang);
+        if (barang) {
+            const namaBarang = barang.nama;
+            const stokSistem = barang.stok;
+            const selisih = stokFisik - stokSistem;
+
+            // Tentukan keterangan otomatis berdasarkan selisih
+            let keteranganOtomatis = '';
+            if (selisih === 0) {
+                keteranganOtomatis = 'Sesuai';
+            } else if (selisih > 0) {
+                keteranganOtomatis = 'Kelebihan';
+            } else {
+                keteranganOtomatis = 'Kekurangan';
+            }
+
+            if (editId) {
+                // Jika sedang edit, update data yang ada
+                const index = dataStokOpname.findIndex(item => item.id === parseInt(editId));
+                if (index !== -1) {
+                    dataStokOpname[index] = {
+                        id: parseInt(editId),
+                        tanggal,
+                        petugas, // Simpan nama petugas
+                        kodeBarang,
+                        namaBarang,
+                        stokSistem,
+                        stokFisik,
+                        selisih,
+                        keterangan: keteranganOtomatis,
+                        status: 'Selesai'
+                    };
+                }
+            } else {
+                // Jika tidak, tambahkan data baru
+                const newId = dataStokOpname.length ? Math.max(...dataStokOpname.map(item => item.id)) + 1 : 1;
+                dataStokOpname.push({
+                    id: newId,
+                    tanggal,
+                    petugas, // Simpan nama petugas
+                    kodeBarang,
+                    namaBarang,
+                    stokSistem,
+                    stokFisik,
+                    selisih,
+                    keterangan: keteranganOtomatis,
+                    status: 'Selesai'
+                });
+            }
+
+            // Update stok barang
+            const barangIndex = dataBarang.findIndex(item => item.kode === kodeBarang);
+            if (barangIndex !== -1) {
+                dataBarang[barangIndex].stok = stokFisik;
+            }
+        }
+    }
+
+    saveData();
+    refreshTableStokOpname();
+    refreshTableBarang();
+    refreshDashboard();
+    refreshTableRekapStok();
+    closeModal('modal-stok-opname');
+
+    // Reset ID edit
+    modal.removeAttribute('data-edit-id');
+}
+        // Fungsi untuk menutup modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Fungsi untuk refresh tabel barang
+        function refreshTableBarang() {
+            const tableBody = document.querySelector('#table-barang tbody');
+            tableBody.innerHTML = '';
+            
+            dataBarang.forEach(barang => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${barang.kode}</td>
+                    <td>${barang.nama}</td>
+                    <td>${barang.kategori}</td>
+                    <td>${barang.satuan}</td>
+                    <td>${barang.hargaBeli.toLocaleString()}</td>
+                    <td>${barang.hargaJual.toLocaleString()}</td>
+                    <td>${barang.stok}</td>
+                    <td>${barang.stokMin}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="showModalBarang(${barang.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteBarang(${barang.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Perbarui dropdown di form stok masuk dan keluar
+            updateBarangDropdowns();
+        }
+        
+        // Fungsi untuk refresh tabel stok masuk
+        function refreshTableStokMasuk() {
+            const tableBody = document.querySelector('#table-stok-masuk tbody');
+            tableBody.innerHTML = '';
+            
+            dataStokMasuk.forEach((stokMasuk, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${stokMasuk.tanggal}</td>
+                    <td>${stokMasuk.kodeBarang}</td>
+                    <td>${stokMasuk.namaBarang}</td>
+                    <td>${stokMasuk.jumlah}</td>
+                    <td>${stokMasuk.supplier}</td>
+                    <td>${stokMasuk.keterangan || '-'}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="showModalStokMasuk(${stokMasuk.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStokMasuk(${stokMasuk.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk refresh tabel stok keluar
+        function refreshTableStokKeluar() {
+            const tableBody = document.querySelector('#table-stok-keluar tbody');
+            tableBody.innerHTML = '';
+            
+            dataStokKeluar.forEach((stokKeluar, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${stokKeluar.tanggal}</td>
+                    <td>${stokKeluar.kodeBarang}</td>
+                    <td>${stokKeluar.namaBarang}</td>
+                    <td>${stokKeluar.jumlah}</td>
+                    <td>${stokKeluar.penerima}</td>
+                    <td>${stokKeluar.keterangan || '-'}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="showModalStokKeluar(${stokKeluar.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStokKeluar(${stokKeluar.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk refresh tabel rekap stok
+        function refreshTableRekapStok() {
+            const tableBody = document.querySelector('#table-rekap-stok tbody');
+            tableBody.innerHTML = '';
+            
+            dataBarang.forEach(barang => {
+                // Hitung stok masuk
+                const stokMasuk = dataStokMasuk
+                    .filter(item => item.kodeBarang === barang.kode)
+                    .reduce((total, item) => total + item.jumlah, 0);
+                
+                // Hitung stok keluar
+                const stokKeluar = dataStokKeluar
+                    .filter(item => item.kodeBarang === barang.kode)
+                    .reduce((total, item) => total + item.jumlah, 0);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${barang.kode}</td>
+                    <td>${barang.nama}</td>
+                    <td>${barang.kategori}</td>
+                    <td>${barang.stok - stokMasuk + stokKeluar}</td>
+                    <td>${stokMasuk}</td>
+                    <td>${stokKeluar}</td>
+                    <td>${barang.stok}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk refresh tabel stok opname
+        function refreshTableStokOpname() {
+    const tableBody = document.querySelector('#table-stok-opname tbody');
+    tableBody.innerHTML = '';
+
+    dataStokOpname.forEach(opname => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${opname.tanggal}</td>
+            <td>${opname.petugas}</td> <!-- Tampilkan nama petugas -->
+            <td>${opname.kodeBarang}</td>
+            <td>${opname.namaBarang}</td>
+            <td>${opname.stokSistem}</td>
+            <td>${opname.stokFisik}</td>
+            <td>${opname.selisih}</td>
+            <td>${opname.keterangan || '-'}</td>
+            <td>${opname.status}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="editStokOpname(${opname.id})">
+        <i class="fas fa-edit"></i> <!-- Ikon Edit -->
+    </button>
+    <button class="btn btn-danger btn-sm" onclick="deleteStokOpname(${opname.id})">
+        <i class="fas fa-trash"></i> <!-- Ikon Hapus -->
+    </button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+function editStokOpname(id) {
+    const opname = dataStokOpname.find(item => item.id === id);
+    if (!opname) {
+        alert('Data stok opname tidak ditemukan!');
+        return;
+    }
+
+    // Tampilkan modal edit
+    const modal = document.getElementById('modal-stok-opname');
+    const tableBody = document.querySelector('#table-form-opname tbody');
+    tableBody.innerHTML = '';
+
+    // Isi form dengan data yang akan diedit
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${opname.kodeBarang}</td>
+        <td>${opname.namaBarang}</td>
+        <td>${opname.stokSistem}</td>
+        <td><input type="number" class="stok-fisik" data-kode="${opname.kodeBarang}" value="${opname.stokFisik}" required></td>
+        <td><input type="text" class="keterangan-opname" data-kode="${opname.kodeBarang}" value=""></td>
+    `;
+    tableBody.appendChild(row);
+
+    // Set tanggal dan petugas
+    document.getElementById('tanggal-stok-opname').value = opname.tanggal;
+    document.getElementById('petugas-stok-opname').value = opname.petugas;
+
+    // Simpan ID data yang sedang diedit
+    modal.setAttribute('data-edit-id', id);
+
+    // Tampilkan modal
+    modal.style.display = 'block';
+}
+        
+        // Fungsi untuk menghapus barang
+        function deleteBarang(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
+                const index = dataBarang.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    dataBarang.splice(index, 1);
+                    saveData();
+                    refreshTableBarang();
+                    refreshDashboard();
+                    refreshTableRekapStok();
+                }
+            }
+        }
+        
+        // Fungsi untuk menghapus stok masuk
+        function deleteStokMasuk(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data stok masuk ini?')) {
+                const index = dataStokMasuk.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    const stokMasuk = dataStokMasuk[index];
+                    
+                    // Update stok barang
+                    const barangIndex = dataBarang.findIndex(item => item.kode === stokMasuk.kodeBarang);
+                    if (barangIndex !== -1) {
+                     dataBarang[barangIndex].stok -= stokMasuk.jumlah;
+                    }
+                    
+                    // Hapus data stok masuk
+                    dataStokMasuk.splice(index, 1);
+                    saveData();
+                    refreshTableStokMasuk();
+                    refreshTableBarang();
+                    refreshDashboard();
+                    refreshTableRekapStok();
+                }
+            }
+        }
+        
+        // Fungsi untuk menghapus stok keluar
+        function deleteStokKeluar(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data stok keluar ini?')) {
+                const index = dataStokKeluar.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    const stokKeluar = dataStokKeluar[index];
+                    
+                    // Update stok barang
+                    const barangIndex = dataBarang.findIndex(item => item.kode === stokKeluar.kodeBarang);
+                    if (barangIndex !== -1) {
+                        dataBarang[barangIndex].stok += stokKeluar.jumlah;
+                    }
+                    
+                    // Hapus data stok keluar
+                    dataStokKeluar.splice(index, 1);
+                    saveData();
+                    refreshTableStokKeluar();
+                    refreshTableBarang();
+                    refreshDashboard();
+                    refreshTableRekapStok();
+                }
+            }
+        }
+        
+        // Fungsi untuk menghapus stok opname
+        function deleteStokOpname(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data stok opname ini?')) {
+                const index = dataStokOpname.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    dataStokOpname.splice(index, 1);
+                    saveData();
+                    refreshTableStokOpname();
+                }
+            }
+        }
+        
+        // Fungsi untuk memperbarui dropdown barang di form stok masuk dan keluar
+        function updateBarangDropdowns() {
+            const barangMasukSelect = document.getElementById('barang-masuk');
+            const barangKeluarSelect = document.getElementById('barang-keluar');
+            
+            // Kosongkan dropdown
+            barangMasukSelect.innerHTML = '<option value="">Pilih Barang</option>';
+            barangKeluarSelect.innerHTML = '<option value="">Pilih Barang</option>';
+            
+            // Isi dropdown dengan data barang
+            dataBarang.forEach(barang => {
+                const optionMasuk = document.createElement('option');
+                optionMasuk.value = barang.kode;
+                optionMasuk.textContent = `${barang.kode} - ${barang.nama}`;
+                barangMasukSelect.appendChild(optionMasuk);
+                
+                const optionKeluar = document.createElement('option');
+                optionKeluar.value = barang.kode;
+                optionKeluar.textContent = `${barang.kode} - ${barang.nama} (Stok: ${barang.stok})`;
+                barangKeluarSelect.appendChild(optionKeluar);
+            });
+        }
+        
+        // Fungsi untuk refresh dashboard
+        function refreshDashboard() {
+            const totalBarang = dataBarang.length;
+            const barangMasukBulan = dataStokMasuk
+                .filter(item => new Date(item.tanggal).getMonth() === new Date().getMonth())
+                .reduce((total, item) => total + item.jumlah, 0);
+            const barangKeluarBulan = dataStokKeluar
+                .filter(item => new Date(item.tanggal).getMonth() === new Date().getMonth())
+                .reduce((total, item) => total + item.jumlah, 0);
+            const stokHampirHabis = dataBarang.filter(item => item.stok <= item.stokMin).length;
+            
+            document.getElementById('total-barang').textContent = totalBarang;
+            document.getElementById('barang-masuk-bulan').textContent = barangMasukBulan;
+            document.getElementById('barang-keluar-bulan').textContent = barangKeluarBulan;
+            document.getElementById('stok-hampir-habis').textContent = stokHampirHabis;
+            
+            // Barang dengan stok terbanyak
+            const topStokBody = document.querySelector('#top-stok tbody');
+            topStokBody.innerHTML = '';
+            const sortedByStok = [...dataBarang].sort((a, b) => b.stok - a.stok).slice(0, 5);
+            sortedByStok.forEach(barang => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${barang.kode}</td>
+                    <td>${barang.nama}</td>
+                    <td>${barang.kategori}</td>
+                    <td>${barang.stok}</td>
+                `;
+                topStokBody.appendChild(row);
+            });
+            
+            // Barang dengan stok menipis
+            const lowStokBody = document.querySelector('#low-stok tbody');
+            lowStokBody.innerHTML = '';
+            const lowStokItems = dataBarang.filter(item => item.stok <= item.stokMin);
+            lowStokItems.forEach(barang => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${barang.kode}</td>
+                    <td>${barang.nama}</td>
+                    <td>${barang.kategori}</td>
+                    <td>${barang.stok}</td>
+                    <td>${barang.stokMin}</td>
+                `;
+                lowStokBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk mencari barang
+        function searchBarang() {
+            const keyword = document.getElementById('search-barang').value.toLowerCase();
+            const filteredBarang = dataBarang.filter(barang => 
+                barang.kode.toLowerCase().includes(keyword) || 
+                barang.nama.toLowerCase().includes(keyword) || 
+                barang.kategori.toLowerCase().includes(keyword)
+            );
+            
+            const tableBody = document.querySelector('#table-barang tbody');
+            tableBody.innerHTML = '';
+            
+            filteredBarang.forEach(barang => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${barang.kode}</td>
+                    <td>${barang.nama}</td>
+                    <td>${barang.kategori}</td>
+                    <td>${barang.satuan}</td>
+                    <td>${barang.hargaBeli.toLocaleString()}</td>
+                    <td>${barang.hargaJual.toLocaleString()}</td>
+                    <td>${barang.stok}</td>
+                    <td>${barang.stokMin}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="showModalBarang(${barang.id})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteBarang(${barang.id})">Hapus</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk filter stok masuk berdasarkan tanggal
+        function filterStokMasuk() {
+            const dariTanggal = document.getElementById('dari-tanggal-masuk').value;
+            const sampaiTanggal = document.getElementById('sampai-tanggal-masuk').value;
+            
+            const filteredStokMasuk = dataStokMasuk.filter(item => 
+                item.tanggal >= dariTanggal && item.tanggal <= sampaiTanggal
+            );
+            
+            const tableBody = document.querySelector('#table-stok-masuk tbody');
+            tableBody.innerHTML = '';
+            
+            filteredStokMasuk.forEach((stokMasuk, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${stokMasuk.tanggal}</td>
+                    <td>${stokMasuk.kodeBarang}</td>
+                    <td>${stokMasuk.namaBarang}</td>
+                    <td>${stokMasuk.jumlah}</td>
+                    <td>${stokMasuk.supplier}</td>
+                    <td>${stokMasuk.keterangan || '-'}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="showModalStokMasuk(${stokMasuk.id})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStokMasuk(${stokMasuk.id})">Hapus</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk filter stok keluar berdasarkan tanggal
+        function filterStokKeluar() {
+            const dariTanggal = document.getElementById('dari-tanggal-keluar').value;
+            const sampaiTanggal = document.getElementById('sampai-tanggal-keluar').value;
+            
+            const filteredStokKeluar = dataStokKeluar.filter(item => 
+                item.tanggal >= dariTanggal && item.tanggal <= sampaiTanggal
+            );
+            
+            const tableBody = document.querySelector('#table-stok-keluar tbody');
+            tableBody.innerHTML = '';
+            
+            filteredStokKeluar.forEach((stokKeluar, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${stokKeluar.tanggal}</td>
+                    <td>${stokKeluar.kodeBarang}</td>
+                    <td>${stokKeluar.namaBarang}</td>
+                    <td>${stokKeluar.jumlah}</td>
+                    <td>${stokKeluar.penerima}</td>
+                    <td>${stokKeluar.keterangan || '-'}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="showModalStokKeluar(${stokKeluar.id})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStokKeluar(${stokKeluar.id})">Hapus</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk filter stok opname berdasarkan tanggal
+        function filterStokOpname() {
+    const tanggal = document.getElementById('tanggal-opname').value;
+
+    // Filter data berdasarkan tanggal
+    const filteredStokOpname = dataStokOpname.filter(item => item.tanggal === tanggal);
+
+    // Tampilkan data yang difilter
+    const tableBody = document.querySelector('#table-stok-opname tbody');
+    tableBody.innerHTML = '';
+
+    filteredStokOpname.forEach(opname => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${opname.tanggal}</td>
+            <td>${opname.petugas}</td> <!-- Pastikan kolom petugas ditampilkan -->
+            <td>${opname.kodeBarang}</td>
+            <td>${opname.namaBarang}</td>
+            <td>${opname.stokSistem}</td>
+            <td>${opname.stokFisik}</td>
+            <td>${opname.selisih}</td>
+            <td>${opname.keterangan || '-'}</td>
+            <td>${opname.status}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="editStokOpname(${opname.id})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteStokOpname(${opname.id})">Hapus</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+        
+        // Fungsi untuk mencari rekap stok
+        function searchRekapStok() {
+            const keyword = document.getElementById('search-rekap').value.toLowerCase();
+            const filteredBarang = dataBarang.filter(barang => 
+                barang.kode.toLowerCase().includes(keyword) || 
+                barang.nama.toLowerCase().includes(keyword) || 
+                barang.kategori.toLowerCase().includes(keyword)
+            );
+            
+            const tableBody = document.querySelector('#table-rekap-stok tbody');
+            tableBody.innerHTML = '';
+            
+            filteredBarang.forEach(barang => {
+                // Hitung stok masuk
+                const stokMasuk = dataStokMasuk
+                    .filter(item => item.kodeBarang === barang.kode)
+                    .reduce((total, item) => total + item.jumlah, 0);
+                
+                // Hitung stok keluar
+                const stokKeluar = dataStokKeluar
+                    .filter(item => item.kodeBarang === barang.kode)
+                    .reduce((total, item) => total + item.jumlah, 0);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${barang.kode}</td>
+                    <td>${barang.nama}</td>
+                    <td>${barang.kategori}</td>
+                    <td>${barang.stok - stokMasuk + stokKeluar}</td>
+                    <td>${stokMasuk}</td>
+                    <td>${stokKeluar}</td>
+                    <td>${barang.stok}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk generate laporan
+        function generateLaporan() {
+    const jenisLaporan = document.getElementById('jenis-laporan').value;
+    const dariTanggal = document.getElementById('laporan-dari-tanggal').value;
+    const sampaiTanggal = document.getElementById('laporan-sampai-tanggal').value;
+
+    let dataLaporan = [];
+    let judulLaporan = '';
+
+    switch (jenisLaporan) {
+        case 'master-barang':
+            dataLaporan = dataBarang;
+            judulLaporan = 'Laporan Master Barang';
+            break;
+        case 'stok-masuk':
+            dataLaporan = dataStokMasuk.filter(item => 
+                item.tanggal >= dariTanggal && item.tanggal <= sampaiTanggal
+            );
+            judulLaporan = 'Laporan Stok Masuk';
+            break;
+        case 'stok-keluar':
+            dataLaporan = dataStokKeluar.filter(item => 
+                item.tanggal >= dariTanggal && item.tanggal <= sampaiTanggal
+            );
+            judulLaporan = 'Laporan Stok Keluar';
+            break;
+        case 'rekap-stok':
+            dataLaporan = dataBarang.map(barang => {
+                const stokMasuk = dataStokMasuk
+                    .filter(item => item.kodeBarang === barang.kode)
+                    .reduce((total, item) => total + item.jumlah, 0);
+                const stokKeluar = dataStokKeluar
+                    .filter(item => item.kodeBarang === barang.kode)
+                    .reduce((total, item) => total + item.jumlah, 0);
+                return {
+                    kode: barang.kode,
+                    nama: barang.nama,
+                    kategori: barang.kategori,
+                    stokAwal: barang.stok - stokMasuk + stokKeluar,
+                    stokMasuk,
+                    stokKeluar,
+                    stokAkhir: barang.stok
+                };
+            });
+            judulLaporan = 'Laporan Rekap Stok';
+            break;
+        case 'stok-opname':
+            dataLaporan = dataStokOpname.filter(item => 
+                item.tanggal >= dariTanggal && item.tanggal <= sampaiTanggal
+            );
+            judulLaporan = 'Laporan Stok Opname';
+            break;
+    }
+
+    const laporanHead = document.getElementById('laporan-head');
+    const laporanBody = document.getElementById('laporan-body');
+    laporanHead.innerHTML = '';
+    laporanBody.innerHTML = '';
+
+    // Jika data laporan kosong, tampilkan pesan
+    if (dataLaporan.length === 0) {
+        document.getElementById('judul-laporan').textContent = judulLaporan;
+        laporanBody.innerHTML = `<tr><td colspan="10" style="text-align: center;">Tidak ada data untuk ditampilkan.</td></tr>`;
+        return;
+    }
+
+    // Buat header tabel
+    const headerRow = document.createElement('tr');
+    Object.keys(dataLaporan[0] || {}).forEach(key => {
+        const th = document.createElement('th');
+        th.textContent = key.toUpperCase();
+        headerRow.appendChild(th);
+    });
+    laporanHead.appendChild(headerRow);
+
+    // Isi body tabel
+    dataLaporan.forEach(item => {
+        const row = document.createElement('tr');
+        Object.values(item).forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            row.appendChild(td);
+        });
+        laporanBody.appendChild(row);
+    });
+
+    document.getElementById('judul-laporan').textContent = judulLaporan;
+}
+        
+        // Fungsi untuk export laporan ke Excel
+        function exportLaporanToExcel() {
+            const table = document.getElementById('table-laporan');
+            const ws = XLSX.utils.table_to_sheet(table);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+            XLSX.writeFile(wb, 'laporan.xlsx');
+        }
+        
+        // Fungsi untuk export laporan ke PDF
+        function exportLaporanToPDF() {
+            const doc = new jspdf.jsPDF();
+            const table = document.getElementById('table-laporan');
+            doc.autoTable({ html: table });
+            doc.save('laporan.pdf');
+        }
+        
+        // Fungsi untuk export tabel ke Excel
+        function exportTableToExcel(tableId, filename) {
+            const table = document.getElementById(tableId);
+            const ws = XLSX.utils.table_to_sheet(table);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+        }
+        
+        // Fungsi untuk export tabel ke PDF
+        function exportTableToPDF(tableId, title) {
+            const doc = new jspdf.jsPDF();
+            const table = document.getElementById(tableId);
+            doc.text(title, 10, 10);
+            doc.autoTable({ html: table });
+            doc.save(`${title}.pdf`);
+        }
+
+// Fungsi untuk menghapus semua data barang
+function hapusSemuaBarang() {
+    if (confirm('Apakah Anda yakin ingin menghapus semua data barang? Tindakan ini tidak dapat dibatalkan!')) {
+        dataBarang = [];
+        saveData();
+        refreshTableBarang();
+        refreshDashboard();
+        refreshTableRekapStok();
+    }
+}
+
+// Fungsi untuk menghapus semua data stok masuk
+function hapusSemuaStokMasuk() {
+    if (confirm('Apakah Anda yakin ingin menghapus semua data stok masuk? Tindakan ini tidak dapat dibatalkan!')) {
+        dataStokMasuk = [];
+        saveData();
+        refreshTableStokMasuk();
+        refreshTableBarang();
+        refreshDashboard();
+        refreshTableRekapStok();
+    }
+}
+
+// Fungsi untuk menghapus semua data stok keluar
+function hapusSemuaStokKeluar() {
+    if (confirm('Apakah Anda yakin ingin menghapus semua data stok keluar? Tindakan ini tidak dapat dibatalkan!')) {
+        dataStokKeluar = [];
+        saveData();
+        refreshTableStokKeluar();
+        refreshTableBarang();
+        refreshDashboard();
+        refreshTableRekapStok();
+    }
+}
+
+// Fungsi untuk menghapus semua data stok opname
+function hapusSemuaStokOpname() {
+    if (confirm('Apakah Anda yakin ingin menghapus semua data stok opname? Tindakan ini tidak dapat dibatalkan!')) {
+        dataStokOpname = [];
+        saveData();
+        refreshTableStokOpname();
+    }
+}
+function handleFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) {
+        alert('Pilih file Excel terlebih dahulu!');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // Ambil data dari sheet pertama
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Konversi sheet ke JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Proses data JSON ke dalam dataBarang
+        processImportedData(jsonData);
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function processImportedData(jsonData) {
+    // Header file Excel (baris pertama)
+    const headers = jsonData[0];
+
+    // Validasi header
+    const expectedHeaders = ['Kode Barang', 'Nama Barang', 'Kategori', 'Satuan', 'Harga Beli', 'Harga Jual', 'Stok', 'Stok Minimum'];
+    if (!expectedHeaders.every((header, index) => headers[index] === header)) {
+        alert('Format file Excel tidak sesuai! Pastikan kolom sesuai dengan template.');
+        return;
+    }
+
+    // Proses data (mulai dari baris kedua)
+    for (let i = 1; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (row.length === 0) continue; // Lewati baris kosong
+
+        const newId = dataBarang.length ? Math.max(...dataBarang.map(item => item.id)) + 1 : 1;
+        const newBarang = {
+            id: newId,
+            kode: row[0], // Kode Barang
+            nama: row[1], // Nama Barang
+            kategori: row[2], // Kategori
+            satuan: row[3], // Satuan
+            hargaBeli: parseFloat(row[4]), // Harga Beli
+            hargaJual: parseFloat(row[5]), // Harga Jual
+            stok: parseInt(row[6]), // Stok
+            stokMin: parseInt(row[7]) // Stok Minimum
+        };
+
+        // Tambahkan data baru ke dataBarang
+        dataBarang.push(newBarang);
+    }
+
+    // Simpan data dan refresh tabel
+    saveData();
+    refreshTableBarang();
+    alert('Data berhasil diimpor!');
+}
+
+// Fungsi untuk mencari barang pada stok masuk
+function searchBarangStokMasuk() {
+    const keyword = document.getElementById('barang-masuk').value.toLowerCase();
+    const hasilCari = document.getElementById('hasil-cari-masuk');
+    hasilCari.innerHTML = '';
+
+    if (keyword.length === 0) {
+        hasilCari.style.display = 'none';
+        return;
+    }
+
+    const filteredBarang = dataBarang.filter(barang => 
+        barang.kode.toLowerCase().includes(keyword) || 
+        barang.nama.toLowerCase().includes(keyword)
+    );
+
+    if (filteredBarang.length > 0) {
+        filteredBarang.forEach(barang => {
+            const div = document.createElement('div');
+            div.textContent = `${barang.kode} - ${barang.nama}`;
+            div.setAttribute('data-kode', barang.kode);
+            div.setAttribute('data-nama', barang.nama);
+            div.onclick = function() {
+                selectBarangStokMasuk(barang.kode, barang.nama);
+            };
+            hasilCari.appendChild(div);
+        });
+        hasilCari.style.display = 'block';
+    } else {
+        hasilCari.style.display = 'none';
+    }
+}
+
+// Fungsi untuk memilih barang pada stok masuk
+function selectBarangStokMasuk(kode, nama) {
+    document.getElementById('barang-masuk').value = `${kode} - ${nama}`;
+    document.getElementById('hasil-cari-masuk').style.display = 'none';
+    document.getElementById('barang-masuk').setAttribute('data-kode', kode);
+}
+
+// Fungsi untuk mencari barang pada stok keluar
+function searchBarangStokKeluar() {
+    const keyword = document.getElementById('barang-keluar').value.toLowerCase();
+    const hasilCari = document.getElementById('hasil-cari-keluar');
+    hasilCari.innerHTML = '';
+
+    if (keyword.length === 0) {
+        hasilCari.style.display = 'none';
+        return;
+    }
+
+    const filteredBarang = dataBarang.filter(barang => 
+        barang.kode.toLowerCase().includes(keyword) || 
+        barang.nama.toLowerCase().includes(keyword)
+    );
+
+    if (filteredBarang.length > 0) {
+        filteredBarang.forEach(barang => {
+            const div = document.createElement('div');
+            div.textContent = `${barang.kode} - ${barang.nama}`;
+            div.setAttribute('data-kode', barang.kode);
+            div.setAttribute('data-nama', barang.nama);
+            div.onclick = function() {
+                selectBarangStokKeluar(barang.kode, barang.nama);
+            };
+            hasilCari.appendChild(div);
+        });
+        hasilCari.style.display = 'block';
+    } else {
+        hasilCari.style.display = 'none';
+    }
+}
+
+// Fungsi untuk memilih barang pada stok keluar
+function selectBarangStokKeluar(kode, nama) {
+    document.getElementById('barang-keluar').value = `${kode} - ${nama}`;
+    document.getElementById('hasil-cari-keluar').style.display = 'none';
+    document.getElementById('barang-keluar').setAttribute('data-kode', kode);
+}
+
+document.addEventListener('click', function(event) {
+    const hasilCariMasuk = document.getElementById('hasil-cari-masuk');
+    const hasilCariKeluar = document.getElementById('hasil-cari-keluar');
+
+    if (!event.target.closest('#barang-masuk')) {
+        hasilCariMasuk.style.display = 'none';
+    }
+
+    if (!event.target.closest('#barang-keluar')) {
+        hasilCariKeluar.style.display = 'none';
+    }
+});
+    </script>
+    </script>
+    <footer style="text-align: center; margin-top: 20px; font-size: 10px; color: #555;">
+    © <span id="year"></span> Aplikasi Inventory Oleh Ivan Hadian. Semua Hak Cipta Dilindungi.
+</footer>
+
+<script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
